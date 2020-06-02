@@ -1,0 +1,5 @@
+1.创建数据库demo_5815
+2.导入demo_5815.sql
+3.修改application\database.php
+
+后台：域名+/admin  账号 admin  密码 www.sucainiu.com
