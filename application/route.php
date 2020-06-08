@@ -1,5 +1,4 @@
 <?php
-
 // +----------------------------------------------------------------------
 // | ThinkPHP [ WE CAN DO IT JUST THINK ]
 // +----------------------------------------------------------------------
@@ -9,31 +8,41 @@
 // +----------------------------------------------------------------------
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
-
 use think\Route;
 
 
-
-//api 资源路由
-// get api api/Index/index 显示列表
-// get api/create api/Index/create  新增
-// post api api/Index/save       保存
-// get api/:id   api/index/read    读取详情
-// get api/:id/edit   api/index/edit   编辑
-// put api/:id   api/index/update     更新
-// delete api/:id   api/index/delete   删除     
-
-Route::resource('api', 'api/index');
-Route::get('api/page/:pagenumber', 'api/index/index', [
-  'pagenumber' => '\d+'
+// 返回全部数据 （分页）
+Route::get('api/page/:pageNumber', 'api/index/index', [
+  'pageNumber' => '\d+',
+  'complete_match' => true,
+]);
+// 返回各栏目数据 （不分页）
+Route::get('api/cate/:categoryID', 'api/index/index', [
+  'categoryID' => '\d+',
+  'complete_match' => true,
+]);
+// 返回各栏目数据 （分页）
+Route::get('api/cate/:categoryID/page/:pageNumber$', 'api/index/index', [
+  'categoryID' => '\d+',
+  'pageNumber' => '\d+',
+  'complete_match' => true,
+]);
+// 返回各栏目数据  limit 条数限制
+Route::get('api/cate/:categoryID/limit/:limit$', 'api/index/index', [
+  'categoryID' => '\d+',
+  'limit' => '\d+',
+  'complete_match' => true,
+]);
+// 返回全部栏目数据  limit 条数限制
+Route::get('api/limit/:limit$', 'api/index/index', [
+  'limit' => '\d+',
+  'complete_match' => true,
+]);
+//获取内容详情
+Route::get('api/detail/:detailID', 'api/index/read', [
+  'detailID' => '\d+',
+  'complete_match' => true,
 ]);
 
-
-//前台 路由
-// Route::group('index',[
-
-//       'tech/:id' = > 'index/article/'
-
-
-
-// ])
+//错误
+Route::get('api', 'api/index/other');
