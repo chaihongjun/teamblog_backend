@@ -7,7 +7,6 @@ use think\Request;
 use  app\common\model\Article as ArticleModel;
 use  app\common\model\Category as CategoryModel;
 
-
 class Index extends Controller
 {
   /**
@@ -31,6 +30,7 @@ class Index extends Controller
     $res = [];
     $status = 200;
     $message = "请求成功！";
+    $cateDirPerPage = [];
     // 【栏目ID】 存在
     if (!empty($categoryID)) {
       //【栏目ID】  存在   【分页】   存在
@@ -44,7 +44,11 @@ class Index extends Controller
         //    "cateName" : 'XXX',    分类名称 
         //    "cateDir" : 'yyy',     分类目录
         //    "categoryID" : '234',  分类ID
-        //    "data": []
+        //    "data": [
+        //            'id':'xxx',
+        //             'cid':'xxx',
+        //                  ......  
+        //]
         //   }
         $cateName =  CategoryModel::where('id', $categoryID)->value('name');
         $cateDir = CategoryModel::where('name', $cateName)->value('dir');
@@ -109,26 +113,58 @@ class Index extends Controller
     else {
       //【栏目ID】 不存在  【分页】 存在
       if (!empty($pageNumber)) {
-        $Blogs = ArticleModel::join()->paginate($pagesize, false, ['page' => $pageNumber])->toArray();
+        $Blogs = ArticleModel::paginate($pagesize, false, ['page' => $pageNumber])->toArray();
+        //分页查询文章对应的 栏目ID
+        $articleCateID = ArticleModel::where('id', '>', 0)->field('cid')->paginate($pagesize, false, ['page' => $pageNumber])->toArray();
+        // 0 => 
+        //   array (size=1)
+        //     'cid' => int 1
+        // 1 => 
+        //   array (size=1)
+        //     'cid' => int 4
+        // 2 => 
+        //   array (size=1)
+        //     'cid' => int 1
+        // 3 => 
+        //   array (size=1)
+        //     'cid' => int 4
+        // var_dump($cateIDPerPage);
+        // exit;
+        // $cateIDPerPage[0]['cid']  获取当前页面第一个文章的栏目ID
+        // 获取全部栏目名称和对应ID
+        //$cateDirPerPage = CategoryModel::column('name, dir', 'id');
 
-        // {
-        //   "total": 7,
-        //   "per_page": 4,
-        //   "current_page": 1,
-        //   "last_page": 2,
-        //    "data": [
-        //          'cateName':
-        //           'cateID':
-        //
-        //]
-        // }
-        // echo "4";
-        // return;
+        // array (size=5)
+        // 1 => 
+        //   array (size=3)
+        //     'id' => int 1
+        //     'name' => string '科技' (length=6)
+        //     'dir' => string '/tech' (length=5)
+        // 2 => 
+        //   array (size=3)
+        //     'id' => int 2
+        //     'name' => string '产品中心' (length=12)
+        //     'dir' => string '/product' (length=8)
+        // 3 => 
+        //   array (size=3)
+        //     'id' => int 3
+        //     'name' => string '电脑' (length=6)
+        //     'dir' => string '/product/computer' (length=17)
+        // 4 => 
+        //   array (size=3)
+        //     'id' => int 4
+        //     'name' => string 'pc机' (length=5)
+        //     'dir' => string '/product/computer/pc' (length=20)
+        // 5 => 
+        //   array (size=3)
+        //     'id' => int 5
+        //     'name' => string '网站公告' (length=12)
+        //     'dir' => string '/notice' (length=7)
 
-        //  添加文章ID 所在栏目 到data  
 
-
-
+        //  $cateDirPerPage[1]['id']  $cateDirPerPage[1]['name']  $cateDirPerPage[1]['dir']
+        // var_dump($cateDirPerPage);
+        // exit;
       }
       // 【栏目ID】 不存在  【分页】 不存在
       else {
@@ -153,7 +189,6 @@ class Index extends Controller
         // 【栏目ID】 不存在  【分页】 不存在  【Limit】 不存在
         else {
           $data = collection(ArticleModel::all())->toArray();
-
           // [
           //  
           //
@@ -179,6 +214,9 @@ class Index extends Controller
       $status = 404;
       $message = "请求失败";
     }
+
+    //获取全部栏目名称和对应ID
+    $cateDirPerPage = CategoryModel::column('name, dir', 'id');
     $res = [
       'host' => $this->request->host(),
       'url' => $this->request->url(),
@@ -191,8 +229,37 @@ class Index extends Controller
       'cateName' => isset($Blogs['cateName']) ? $Blogs['cateName'] : $cateName,
       'cateDir' => isset($Blogs['cateDir']) ? $Blogs['cateDir'] : $cateDir,
       'cateId' => isset($Blogs['categoryID']) ? $Blogs['categoryID'] : $categoryID,
+      'cateDirPerPage' => $cateDirPerPage,
       'data' => isset($Blogs['data']) ? $Blogs['data'] : $Blogs,
     ];
+    return json($res);
+  }
+  /**
+   * random 查询随机数据
+   *
+   * @param  mixed $request
+   * @return void
+   */
+  public function random(Request $request)
+  {
+    $categoryID = $request->param('categoryID');  //获取访问的栏目ID
+    $limit = $request->param('limit');
+    // echo  '$categoryID: ' . $categoryID;
+    // echo '</br>';
+    // echo    '$limit: ' . $limit;
+    // var_dump($categoryID);
+    // return;
+    //获取N条随机数
+    $data =  collection(ArticleModel::randQuery($categoryID,  $limit))->toArray();
+
+    //获取全部栏目名称和对应ID
+    $cateDirPerPage = CategoryModel::column('name, dir', 'id');
+
+    $res['cateId'] = $categoryID;
+    $res['total'] = $limit;
+    $res['cateDirPerPage'] = $cateDirPerPage;
+    $res['data'] = $data;
+
     return json($res);
   }
   public function other(Request $request)
@@ -200,7 +267,6 @@ class Index extends Controller
     $res = [
       'message' => '请求无效',
       'status' =>  400,
-
     ];
     return json($res);
   }

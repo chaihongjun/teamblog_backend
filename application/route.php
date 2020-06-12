@@ -9,8 +9,6 @@
 // | Author: liu21st <liu21st@gmail.com>
 // +----------------------------------------------------------------------
 use think\Route;
-
-
 // 返回全部数据 （分页）
 Route::get('api/page/:pageNumber', 'api/index/index', [
   'pageNumber' => '\d+',
@@ -22,19 +20,30 @@ Route::get('api/cate/:categoryID', 'api/index/index', [
   'complete_match' => true,
 ]);
 // 返回各栏目数据 （分页）
-Route::get('api/cate/:categoryID/page/:pageNumber$', 'api/index/index', [
+Route::get('api/cate/:categoryID/page/:pageNumber', 'api/index/index', [
   'categoryID' => '\d+',
   'pageNumber' => '\d+',
   'complete_match' => true,
 ]);
 // 返回各栏目数据  limit 条数限制
-Route::get('api/cate/:categoryID/limit/:limit$', 'api/index/index', [
+Route::get('api/cate/:categoryID/limit/:limit', 'api/index/index', [
   'categoryID' => '\d+',
   'limit' => '\d+',
   'complete_match' => true,
 ]);
 // 返回全部栏目数据  limit 条数限制
-Route::get('api/limit/:limit$', 'api/index/index', [
+Route::get('api/limit/:limit', 'api/index/index', [
+  'limit' => '\d+',
+  'complete_match' => true,
+]);
+// 返回全部栏目[随机]数据  limit 条数限制
+Route::get('api/rand/limit/:limit', 'api/index/random', [
+  'limit' => '\d+',
+  'complete_match' => true,
+]);
+// 返回指定栏目[随机]数据  limit 条数限制
+Route::get('api/cate/:categoryID/rand/limit/:limit', 'api/index/random', [
+  'categoryID' => '\d+',
   'limit' => '\d+',
   'complete_match' => true,
 ]);
@@ -43,6 +52,5 @@ Route::get('api/detail/:detailID', 'api/index/read', [
   'detailID' => '\d+',
   'complete_match' => true,
 ]);
-
 //错误
 Route::get('api', 'api/index/other');
