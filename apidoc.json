@@ -1,0 +1,10 @@
+{
+  "name": "团队博客接口",
+  "version": "0.0.1",
+  "description": "团队博客后台接口",
+  "title": "团队博客接口",
+  "url": "http://www.tp5.com/api",
+  "template": {
+    "forceLanguage": "zh_cn"
+  }
+}
