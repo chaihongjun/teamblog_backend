@@ -153,6 +153,17 @@ class Index extends Controller
     ];
     return json($res);
   }
+
+
+
+
+
+
+
+
+
+
+
   /**
    * random 查询随机数据
    *
