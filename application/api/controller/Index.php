@@ -33,9 +33,22 @@ class Index extends Controller
     $cateDirPerPage = [];
     // 【栏目ID】 存在
     if (!empty($categoryID)) {
-      //【栏目ID】  存在   【分页】   存在
+      //【栏目ID】 存在   【分页】 存在
       if (!empty($pageNumber)) {
-        $Blogs = ArticleModel::where('cid', $categoryID)->paginate($pagesize, false, ['page' => $pageNumber, 'list_rows' => $pagesize])->toArray();
+        //判断是否有子栏目
+        $category_children_ids = CategoryModel::where(['path' => ['like', "%,{$categoryID},%"]])->column('id');
+        // var_dump($category_children_ids);
+        // return;
+        if (empty($category_children_ids)) {
+          $Blogs = ArticleModel::where('cid', $categoryID)->paginate($pagesize, false, ['page' => $pageNumber, 'list_rows' => $pagesize])->toArray();
+        } else {
+          //有子栏目,直接查询子栏目内容
+          array_push($category_children_ids, $categoryID);
+          $children_ids = implode(',', $category_children_ids);  //转换成字符串"1,2,3"
+
+
+          $Blogs = ArticleModel::where(['cid' => ['in', $children_ids]])->paginate($pagesize, false, ['page' => $pageNumber, 'list_rows' => $pagesize])->toArray();
+        }
         // {
         //   "total": 7,
         //   "per_page": 4,
@@ -59,12 +72,19 @@ class Index extends Controller
       }
       //【栏目ID】存在【分页】不存在
       else {
-        // 【栏目ID】存在【分页】不存在【limit】不存在
+        // 【栏目ID】存在【分页】不存在    【limit】不存在
         if (empty($limit)) {
-          $data =  collection(ArticleModel::where('cid', $categoryID)->select())->toArray();
-
+          //判断是否有子栏目
+          $category_children_ids = CategoryModel::where(['path' => ['like', "%,{$categoryID},%"]])->column('id');
+          if (empty($category_children_ids)) {
+            $data =  collection(ArticleModel::where('cid', $categoryID)->select())->toArray();
+          } else {
+            //有子栏目,直接查询子栏目内容
+            array_push($category_children_ids, $categoryID);
+            $children_ids = implode(',', $category_children_ids);  //转换成字符串"1,2,3"
+            $data =  collection(ArticleModel::where(['cid' => ['in', $children_ids]])->select())->toArray();
+          }
           $total = count($data);
-
           $cateName =  CategoryModel::where('id', $categoryID)->value('name');
           $cateDir = CategoryModel::where('name', $cateName)->value('dir');
           //添加 分类名称 分类目录 分类ID到结果
@@ -76,10 +96,18 @@ class Index extends Controller
         }
         // 【栏目ID】  存在   【分页】   不存在 【limit】  存在
         else {
-          $data =  collection(ArticleModel::where('cid', $categoryID)->limit($limit)->select())->toArray();
 
+          //判断是否有子栏目
+          $category_children_ids = CategoryModel::where(['path' => ['like', "%,{$categoryID},%"]])->column('id');
+          if (empty($category_children_ids)) {
+            $data =  collection(ArticleModel::where('cid', $categoryID)->limit($limit)->select())->toArray();
+          } else {
+            //有子栏目,直接查询子栏目内容
+            array_push($category_children_ids, $categoryID);
+            $children_ids = implode(',', $category_children_ids);  //转换成字符串"1,2,3"
+            $data =  collection(ArticleModel::where(['cid' => ['in', $children_ids]])->select())->toArray();
+          }
           $total = count($data);
-
           $cateName =  CategoryModel::where('id', $categoryID)->value('name');
           $cateDir = CategoryModel::where('name', $cateName)->value('dir');
           //添加 分类名称 分类目录 分类ID到结果
@@ -104,24 +132,18 @@ class Index extends Controller
         // 【栏目ID】 不存在  【分页】 不存在  【Limit】 存在
         if (!empty($limit)) {
           $data = collection(ArticleModel::limit($limit)->select())->toArray();
-
           $total = count($data);
-
           $Blogs['total'] =   $total;
           $Blogs['data'] =   $data;
           $per_page = null;  //清空分页
-
         }
         // 【栏目ID】 不存在  【分页】 不存在  【Limit】 不存在
         else {
           $data = collection(ArticleModel::all())->toArray();
-
           $total = count($data);
-
           $Blogs['total'] =   $total;
           $Blogs['data'] =   $data;
           $per_page = null;  //清空分页 
-
         }
       }
     }
@@ -133,7 +155,6 @@ class Index extends Controller
       $status = 404;
       $message = "请求失败";
     }
-
     //获取全部栏目名称和对应ID
     $cateDirPerPage = CategoryModel::column('name, dir', 'id');
     $res = [
@@ -153,17 +174,6 @@ class Index extends Controller
     ];
     return json($res);
   }
-
-
-
-
-
-
-
-
-
-
-
   /**
    * random 查询随机数据
    *
@@ -174,18 +184,14 @@ class Index extends Controller
   {
     $categoryID = $request->param('categoryID');  //获取访问的栏目ID
     $limit = $request->param('limit');
-
     //获取N条随机数
     $data =  collection(ArticleModel::randQuery($categoryID,  $limit))->toArray();
-
     //获取全部栏目名称和对应ID
     $cateDirPerPage = CategoryModel::column('name, dir', 'id');
-
     $res['cateId'] = $categoryID;
     $res['total'] = $limit;
     $res['cateDirPerPage'] = $cateDirPerPage;
     $res['data'] = $data;
-
     return json($res);
   }
   public function other(Request $request)
@@ -225,7 +231,6 @@ class Index extends Controller
   {
     $detailID = $request->param('detailID');  //获取指定内容ID
     $data = ArticleModel::get($detailID)->toArray();
-
     $cateID = $data['cid'];
     $cateDir =  CategoryModel::where('id', $cateID)->value('dir');
     $cateName =  CategoryModel::where('id', $cateID)->value('name');
