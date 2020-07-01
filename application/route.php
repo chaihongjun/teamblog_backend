@@ -52,5 +52,29 @@ Route::get('api/detail/:detailID', 'api/index/read', [
   'detailID' => '\d+',
   'complete_match' => true,
 ]);
+
+//获取轮播图数据
+Route::get('api/slide/:limit', 'api/index/slide', [
+
+  ':limit' => '\d+',
+  'complete_match' => true,
+
+]);
+
+
+// 获取相关内容
+
+Route::get('api/relate/:keyword/limit/:limit/id/:id', 'api/index/relate', [
+  ':keyword' => '\w+',
+  ':limit' => '\d+',
+  ':id' => '\d+',
+  'complete_match' => true,
+
+]);
+
+
+
+
+
 //错误
 Route::get('api', 'api/index/other');
