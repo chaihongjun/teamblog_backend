@@ -6,6 +6,7 @@ use think\Controller;
 use think\Request;
 use  app\common\model\Article as ArticleModel;
 use  app\common\model\Category as CategoryModel;
+use  app\common\model\Slide as SlideModel;
 
 class Index extends Controller
 {
@@ -45,8 +46,6 @@ class Index extends Controller
           //有子栏目,直接查询子栏目内容
           array_push($category_children_ids, $categoryID);
           $children_ids = implode(',', $category_children_ids);  //转换成字符串"1,2,3"
-
-
           $Blogs = ArticleModel::where(['cid' => ['in', $children_ids]])->paginate($pagesize, false, ['page' => $pageNumber, 'list_rows' => $pagesize])->toArray();
         }
         // {
@@ -96,7 +95,6 @@ class Index extends Controller
         }
         // 【栏目ID】  存在   【分页】   不存在 【limit】  存在
         else {
-
           //判断是否有子栏目
           $category_children_ids = CategoryModel::where(['path' => ['like', "%,{$categoryID},%"]])->column('id');
           if (empty($category_children_ids)) {
@@ -171,6 +169,41 @@ class Index extends Controller
       'cateId' => isset($Blogs['categoryID']) ? $Blogs['categoryID'] : $categoryID,
       'cateDirPerPage' => $cateDirPerPage,
       'data' => isset($Blogs['data']) ? $Blogs['data'] : $Blogs,
+    ];
+    return json($res);
+  }
+  /**
+   * slider  幻灯片
+   *
+   * @return void
+   */
+  public function slide(Request $request)
+  {
+    $limit = $request->param('limit');   //获取轮播图数量
+    //查询轮播
+    $slide = collection(SlideModel::limit($limit)->select())->toArray();
+    $res = [
+      'data' => $slide
+    ];
+    return json($res);
+  }
+  // 获取相关推荐 接口
+  public function relate(Request $request)
+  {
+    $keyword = $request->param('keyword');
+    $limit = $request->param('limit');
+    $id = $request->param('id');
+    $map['keywords'] = ['like', '%' . $keyword . '%'];
+    $map['id'] = ['not in', $id];
+    $res = collection(ArticleModel::where($map)->limit($limit)->distinct(true)->select())->toArray();
+    if (empty($res)) {
+      $res = "";
+    }
+    $res = [
+      'keyword' => $keyword,
+      'limit' => $limit,
+      'total' => count($res),
+      'data' => $res,
     ];
     return json($res);
   }
