@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>品牌手机号</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css"
+    />
+    <style>
+      [v-cloak] {
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.19.2/axios.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-12 col-sm-12 col-md-12 col-xl-12">
+            <h1 class="text-center">品牌手机号查询</h1>
+          </div>
+        </div>
+        <div class="row">
+          <div class="table-responsive col-lg-12 col-sm-12 col-md-12 col-xl-12">
+            <table class="table table-striped text-nowrap table-bordered">
+              <thead class="table-info">
+                <tr>
+                  <th>序号</th>
+                  <th>品牌</th>
+                  <th>手机号</th>
+                  <th>持有人</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(result,index) of results" :key="index" v-cloak>
+                  <td>
+                    {{index+1}}
+                  </td>
+                  <td>
+                    {{result.name}}
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      name="mobile"
+                      v-model="result.mobile"
+                      :disabled="index != isActive"
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      name="owner"
+                      v-model="result.owner"
+                      :disabled="index != isActive"
+                    />
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button
+                        type="button"
+                        class="btn btn-warning"
+                        @click="change(index)"
+                      >
+                        修改
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-primary"
+                        @click="save(index)"
+                      >
+                        保存
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-lg-12 col-sm-12 col-md-12 col-xl-12">
+            <footer class="text-center">网络部版权所有</footer>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+<script>
+  // 页面加载初始化数据
+  window.addEventListener("load", function () {
+    axios
+      .get("http://192.168.0.122:8080/api/brand/index")
+      .then(function (res) {
+        // console.log(res.data);
+        vm.results = res.data;
+        // console.log(vm.results);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  });
+  let vm = new Vue({
+    el: "#app",
+    data: {
+      isActive: -1,
+      results: [],
+    },
+    methods: {
+      change(index) {
+        // 点击索引 index
+        this.isActive = index;
+      },
+      // 保存更新的数据
+      save(index) {
+        this.isActive = -1;
+        let id = index + 1;
+        let mobile = document.getElementsByName("mobile")[index].value;
+        let owner = document.getElementsByName("owner")[index].value;
+        // console.log(mobile);
+        // console.log(owner);
+        let formData = {
+          id,
+          mobile,
+          owner,
+        };
+        // console.log(formData);
+        axios({
+          method: "post",
+          url: "http://www.tp5.com:8080/api/brand/update",
+          header: {
+            "Content-Type": "application/json;charset=utf-8",
+          },
+          data: formData,
+        })
+          .then(function (res) {
+            if (res.data.status == "200") {
+              console.log(res.data.msg);
+            }
+          })
+          .catch(function (error) {
+            if (error.status == "500") {
+              console.log(error.data.msg);
+            }
+          });
+      },
+    },
+  });
+</script>
