@@ -76,5 +76,14 @@ Route::get('api/relate/:keyword/limit/:limit/id/:id', 'api/index/relate', [
 
 
 
+
+//显示查询页面
+Route::get('index/brand/index', 'index/brand/index');
+// 后台接口数据
+Route::get('api/brand/index', 'api/brand/index');
+// 提交服务器接口
+Route::post('api/brand/update', 'api/brand/update');
+
+
 //错误
 Route::get('api', 'api/index/other');
