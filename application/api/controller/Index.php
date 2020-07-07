@@ -274,6 +274,31 @@ class Index extends Controller
     ];
     return json($res);
   }
+
+
+
+  /**
+   * tag tag相关内容列表
+   *
+   * @return void
+   */
+  public function tag(Request $request)
+  {
+    $pageNumber = $request->param('pageNumber');  //当前分页页码
+    $pagesize = 4;  //分页大小
+    $keyword =  $request->param('keyword');
+    $map['keywords'] = ['like', '%' . $keyword . '%'];
+    //获取全部栏目名称和对应ID
+    $cateDirPerPage = CategoryModel::column('name, dir', 'id');
+    $result = ArticleModel::where($map)->paginate($pagesize, false, ['page' => $pageNumber, 'list_rows' =>  $pagesize])->toArray();
+
+    $result['$cateDirPerPage'] = $cateDirPerPage;
+
+
+    return Json($result);
+  }
+
+
   /**
    * 显示编辑资源表单页.
    *
