@@ -62,6 +62,21 @@ Route::get('api/slide/:limit', 'api/index/slide', [
 ]);
 
 
+//获取Tag列表页资源
+Route::get('api/tag/:keyword', 'api/index/tag', [
+  ':keyword' => '\w+',
+  'complete_match' => true,
+]);
+
+Route::get('api/tag/:keyword/page/:pageNumber', 'api/index/tag', [
+  ':keyword' => '\w+',
+  ':pageNumber' => '\d+',
+  'complete_match' => true,
+]);
+
+
+
+
 // 获取相关内容
 
 Route::get('api/relate/:keyword/limit/:limit/id/:id', 'api/index/relate', [
